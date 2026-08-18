@@ -1,0 +1,57 @@
+name: Deploy Portfolio Website
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  deploy:
+
+    runs-on: self-hosted
+
+    steps:
+
+      - name: Checkout Application
+        uses: actions/checkout@v4
+
+      - name: Verify Files
+        run: |
+          echo "Application files:"
+          ls -la
+
+      - name: Deploy Website
+        run: |
+
+          echo "Starting deployment..."
+
+          sudo rm -rf /var/www/portfolio/*
+
+          sudo cp -r ./* /var/www/portfolio/
+
+          sudo chown -R www-data:www-data /var/www/portfolio
+
+          sudo find /var/www/portfolio -type d -exec chmod 755 {} \;
+
+          sudo find /var/www/portfolio -type f -exec chmod 644 {} \;
+
+          echo "Website deployed successfully."
+
+      - name: Test Nginx
+        run: |
+          sudo nginx -t
+
+      - name: Reload Nginx
+        run: |
+          sudo systemctl reload nginx
+
+      - name: Health Check
+        run: |
+          curl -f http://localhost/health
+
+          echo "Health check successful."
+
+      - name: Verify Website
+        run: |
+          curl -f http://localhost/
